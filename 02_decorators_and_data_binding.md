@@ -1,117 +1,209 @@
 # 📘 02. Angular — Decorators & Data Binding
 
-> **Topics:** Decorators Overview · Data Binding Concepts · Syntax Cheat Sheet · Interpolation · Property, Attribute, Class, Style & ARIA Bindings · Event Binding & Key Modifiers · Two-Way Binding (`ngModel` & `model()`)  
+> **Topics:** Decorators Overview · Data Binding Concepts · Syntax Cheat Sheet · Interpolation · Property, Attribute, Class, Style & ARIA Bindings · Event Binding & Modifiers · Two-Way Binding (`ngModel` & Signal `model()`)  
 > **Source:** Strictly verified against official Angular documentation ([angular.dev](https://angular.dev)).
 
 ---
 
 ## 1. Decorators Overview
 
-> A **Decorator** is a special TypeScript annotation prefixed with `@` that attaches metadata to classes, methods, or properties so Angular knows how to process and configure them.
+> A **Decorator** is a special TypeScript function prefixed with `@` that attaches metadata to classes, methods, or properties so Angular knows how to configure and execute them.
 
 ### Core Angular Decorators
 
-| Decorator | Target | Purpose |
-| :--- | :--- | :--- |
-| `@Component()` | Class | Marks a class as an Angular UI component with a template, styles, and selector |
-| `@Directive()` | Class | Creates custom behaviors or modifies DOM elements |
-| `@Pipe()` | Class | Defines reusable data transformation logic in templates |
-| `@Injectable()` | Class | Registers a service class in Angular's Dependency Injection system |
-| `@Input()` | Property | Marks a property as configurable from a parent component |
-| `@Output()` | Property | Marks a property as an event producer that emits data to parent components |
+| Decorator | Target | Purpose | Modern Alternative (Signals) |
+| :--- | :--- | :--- | :--- |
+| `@Component()` | Class | Defines a UI component (template, styles, selector) | — |
+| `@Directive()` | Class | Attaches custom behavior to DOM elements | — |
+| `@Pipe()` | Class | Defines reusable data transformations in templates | — |
+| `@Injectable()` | Class | Registers a service in Dependency Injection | — |
+| `@Input()` | Property | Accepts input values from parent component | `input()` signal (v17.1+) |
+| `@Output()` | Property | Emits custom events to parent component | `output()` function (v17.3+) |
+
+---
+
+### Concrete Examples for Each Class Decorator
+
+#### 1. `@Component` (UI Building Block)
+```ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-greeting',
+  standalone: true,
+  template: `<h2>Hello, {{ name() }}!</h2>`,
+  styles: [`h2 { color: #2563eb; }`]
+})
+export class GreetingComponent {
+  name = signal('Angular Learner');
+}
+```
+
+#### 2. `@Directive` (Custom DOM Behavior)
+```ts
+import { Directive, ElementRef, HostListener, inject } from '@angular/core';
+
+@Directive({
+  selector: '[appHighlight]',
+  standalone: true
+})
+export class HighlightDirective {
+  private el = inject(ElementRef);
+
+  @HostListener('mouseenter') onMouseEnter() {
+    this.el.nativeElement.style.backgroundColor = 'yellow';
+  }
+
+  @HostListener('mouseleave') onMouseLeave() {
+    this.el.nativeElement.style.backgroundColor = '';
+  }
+}
+```
+
+#### 3. `@Pipe` (Data Transformation)
+```ts
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'truncate',
+  standalone: true
+})
+export class TruncatePipe implements PipeTransform {
+  transform(value: string, limit = 20): string {
+    if (!value) return '';
+    return value.length > limit ? value.substring(0, limit) + '...' : value;
+  }
+}
+```
+
+#### 4. `@Injectable` (Shared Service)
+```ts
+import { Injectable, signal } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root' // Singleton available application-wide
+})
+export class NotificationService {
+  messages = signal<string[]>([]);
+
+  addMessage(msg: string): void {
+    this.messages.update(list => [...list, msg]);
+  }
+}
+```
 
 ---
 
 ## 2. What is Data Binding?
 
-**Data binding** is the automatic synchronization of data between the TypeScript component class (**source**) and the HTML template (**view**).
+**Data binding** is the automatic synchronization of state between the TypeScript component class (**Source**) and the HTML template (**View**).
 
 ```mermaid
 flowchart LR
-    subgraph Component["Component Class (TypeScript)"]
-        State["State / Properties"]
+    subgraph Component["TypeScript Component Class (Source)"]
+        State["Component State & Properties"]
     end
 
-    subgraph Template["HTML Template (DOM)"]
-        View["DOM Elements / Views"]
+    subgraph Template["HTML Template / DOM (View)"]
+        View["Rendered DOM Elements"]
     end
 
-    Component -->|"1. Source → View\nInterpolation {{ }}\nProperty [prop]\nClass/Style/Attr"| Template
+    Component -->|"1. Source → View\nInterpolation {{ }}\nProperty [prop]\nClass [class] / Style [style]\nAttribute [attr.name]"| Template
     Template -->|"2. View → Source\nEvent Binding (event)"| Component
-    Component <-->|"3. Two-Way Binding\n[(ngModel)] / model()"| Template
+    Component <-->|"3. Two-Way Binding\n[(ngModel)] / [(model)]"| Template
 ```
 
 ---
 
 ## 3. Syntax Cheat Sheet
 
-| Binding Type | Syntax | Data Flow Direction | Primary Use Case |
+| Binding Type | Syntax | Data Flow | Common Use Case |
 | :--- | :--- | :--- | :--- |
-| **Interpolation** | `{{ value }}` | Source $\rightarrow$ View | Display text dynamically in DOM |
-| **Property Binding** | `[property]="expression"` | Source $\rightarrow$ View | Set DOM object property (e.g., `disabled`, `src`) |
-| **Attribute Binding** | `[attr.name]="expression"` | Source $\rightarrow$ View | Set HTML attribute (SVG, `colspan`, ARIA) |
-| **Class Binding** | `[class.name]="condition"` | Source $\rightarrow$ View | Toggle single or multiple CSS classes |
-| **Style Binding** | `[style.prop]="expression"` | Source $\rightarrow$ View | Apply inline CSS styles dynamically |
-| **Event Binding** | `(event)="handler()"` | View $\rightarrow$ Source | Listen for DOM events (e.g., click, keyup) |
-| **Two-Way Binding** | `[(ngModel)]="property"` | Source $\rightleftarrows$ View | Keep form inputs in sync with TS state |
+| **Interpolation** | `{{ value }}` | Source $\rightarrow$ View | Render text strings in the DOM |
+| **Property Binding** | `[property]="value"` | Source $\rightarrow$ View | Bind to DOM element properties (`src`, `disabled`) |
+| **Attribute Binding** | `[attr.name]="value"` | Source $\rightarrow$ View | Bind to HTML attributes (`colspan`, `aria-*`, SVG) |
+| **Class Binding** | `[class.active]="bool"` | Source $\rightarrow$ View | Toggle CSS classes dynamically |
+| **Style Binding** | `[style.color]="val"` | Source $\rightarrow$ View | Set inline CSS styles dynamically |
+| **Event Binding** | `(event)="handler()"` | View $\rightarrow$ Source | Listen to user interactions (click, input, keyup) |
+| **Two-Way Binding** | `[(ngModel)]="val"` | Source $\rightleftarrows$ View | Keep form inputs & TS state in bidirectional sync |
 
-> 💡 **Memory Helper:**
-> - `[ ]` = **Data INTO element** (Property / Attribute / Class / Style binding)
-> - `( )` = **Event OUT OF element** (Event binding)
-> - `[( )]` = **Banana in a box** (Two-Way binding: both directions at once)
+> 💡 **Syntax Memory Rule:**
+> - `[ ]` = **Square brackets**: Data flowing **INTO** the element (Properties/Styles).
+> - `( )` = **Parentheses**: Events flowing **OUT OF** the element (Actions/Listeners).
+> - `[( )]` = **Banana in a box**: Both directions simultaneously (**Two-Way Binding**).
 
 ---
 
 ## 4. Interpolation — `{{ }}`
 
-Interpolation evaluates a TypeScript expression and converts the result into plain text inside the HTML template.
+Interpolation evaluates TypeScript expressions and inserts the resulting string into the HTML template.
 
 ```ts
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 
 @Component({
-  selector: 'app-user-greeting',
+  selector: 'app-interpolation-demo',
+  standalone: true,
   template: `
-    <h2>Welcome back, {{ userName }}!</h2>
-    <p>Role: {{ userRole.toUpperCase() }}</p>
-    <!-- Interpolation with Signals (Modern Angular) -->
-    <p>Current Status: {{ userStatus() }}</p>
+    <!-- 1. Simple Property -->
+    <h2>Welcome, {{ username }}</h2>
+
+    <!-- 2. Expressions & String Methods -->
+    <p>Role: {{ role.toUpperCase() }}</p>
+    <p>Status: {{ isOnline ? '🟢 Online' : '🔴 Offline' }}</p>
+    <p>Next Year: {{ currentYear + 1 }}</p>
+
+    <!-- 3. Signals (Invoked as functions in templates) -->
+    <p>Unread Messages: {{ unreadCount() }}</p>
+    <p>Summary: {{ summary() }}</p>
   `
 })
-export class UserGreetingComponent {
-  userName = 'Alex';
-  userRole = 'administrator';
-  userStatus = signal('Active');
+export class InterpolationDemoComponent {
+  username = 'Sarah Connor';
+  role = 'engineer';
+  isOnline = true;
+  currentYear = 2026;
+
+  // Signals
+  unreadCount = signal(5);
+  summary = computed(() => `You have ${this.unreadCount()} pending notifications.`);
 }
 ```
+
+### ⚠️ What is NOT Allowed in Interpolation
+- Assignments (`{{ x = 10 }}`)
+- Increment / decrement operators (`{{ count++ }}`)
+- New instance creation (`{{ new Date() }}`)
+- Bitwise operators or JavaScript keywords (`typeof`, `instanceof`)
 
 ---
 
 ## 5. Property Binding — `[ ]`
 
-Property binding binds a value to a **DOM Object property** (not the HTML string attribute).
+Property binding sets a value directly on a **DOM Object property** (not the HTML string attribute).
 
 ```ts
 import { Component, signal } from '@angular/core';
 
 @Component({
-  selector: 'app-profile-card',
+  selector: 'app-property-demo',
+  standalone: true,
   template: `
-    <!-- Native element DOM property -->
-    <img [src]="avatarUrl()" [alt]="userAltText" />
+    <!-- 1. Binding to DOM element properties -->
+    <img [src]="avatarUrl()" [alt]="avatarAlt" />
 
-    <!-- Button disabled state -->
-    <button [disabled]="isSubmitting()">Submit Form</button>
+    <!-- 2. Boolean property (disabled, checked, hidden) -->
+    <button [disabled]="isSubmitting()">Submit Application</button>
 
-    <!-- Passing property into a child component input -->
-    <app-user-details [userId]="currentUserId"></app-user-details>
+    <!-- 3. Dynamic href on links -->
+    <a [href]="dashboardUrl">Go to Dashboard</a>
   `
 })
-export class ProfileCardComponent {
-  avatarUrl = signal('https://example.com/avatar.png');
-  userAltText = 'User avatar photo';
+export class PropertyDemoComponent {
+  avatarUrl = signal('https://angular.dev/assets/images/press-kit/angular_wordmark.svg');
+  avatarAlt = 'Angular Logo';
   isSubmitting = signal(false);
-  currentUserId = 42;
+  dashboardUrl = '/dashboard';
 }
 ```
 
@@ -119,171 +211,200 @@ export class ProfileCardComponent {
 
 ## 6. Attribute Binding — `[attr.name]`
 
-Used when a DOM element property does not exist (e.g., SVG attributes, `colspan`, `aria-*`, `role`).
+HTML attributes and DOM properties are different:
+- **Attributes** are defined in HTML markup to initialize elements.
+- **Properties** exist on DOM object nodes in JavaScript.
+
+When a DOM element does not have a matching property (e.g. `colspan`, SVG attributes, `aria-*`), use `[attr.attributeName]`.
 
 ```html
-<!-- Table colspan binding -->
-<td [attr.colspan]="columnSpanCount">Column content</td>
+<!-- Table column span (no 'colspan' property on HTMLTableCellElement, only HTML attribute) -->
+<td [attr.colspan]="colSpanSize">Merged Table Header</td>
 
-<!-- SVG attribute binding -->
-<svg>
-  <circle [attr.cx]="centerX" [attr.cy]="centerY" [attr.r]="radius"></circle>
+<!-- SVG coordinates (SVG attributes must be bound via attr) -->
+<svg width="100" height="100">
+  <circle [attr.cx]="centerX" [attr.cy]="centerY" [attr.r]="radius" fill="red" />
 </svg>
 
-<!-- ARIA role binding -->
-<div [attr.role]="userRole">Accessible Container</div>
+<!-- Custom data attribute -->
+<div [attr.data-user-id]="userId">User Container</div>
 ```
 
-*Note: If the bound expression resolves to `null` or `undefined`, Angular automatically removes the attribute from the DOM.*
+> 💡 **Note:** When the expression evaluates to `null` or `undefined`, Angular automatically removes the attribute from the DOM element.
 
 ---
 
-## 7. Class Binding — `[class.className]` / `[class]`
+## 7. Class Binding — `[class]` / `[class.name]`
 
-Dynamically adds or removes CSS class names on an HTML element.
+Dynamically applies or removes CSS classes.
 
-### Single Class Toggle
-```html
-<button [class.active]="isActive" [class.disabled]="isPending()">
-  Click Me
-</button>
-```
-
-### Multiple Classes (String, Array, or Object)
 ```ts
 import { Component, signal } from '@angular/core';
 
 @Component({
-  selector: 'app-button-group',
+  selector: 'app-class-binding-demo',
+  standalone: true,
   template: `
-    <!-- Bind object of class names to boolean conditions -->
-    <div [class]="classObject">Container</div>
+    <!-- 1. Single class toggle based on boolean condition -->
+    <div [class.active]="isActive()">Active Box</div>
+    <div [class.is-loading]="isPending()">Loading Box</div>
 
-    <!-- Bind array of class names -->
-    <button [class]="classArray()">Dynamic Button</button>
-  `
+    <!-- 2. Multiple classes as an Object (class name -> boolean) -->
+    <div [class]="boxClasses">Styled Container</div>
+
+    <!-- 3. Multiple classes as an Array or String -->
+    <button [class]="buttonClassList()">Status Button</button>
+  `,
+  styles: [`
+    .active { border-left: 4px solid #10b981; }
+    .is-loading { opacity: 0.6; }
+    .card { padding: 1rem; }
+    .shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+    .btn-primary { background: #2563eb; color: white; border-radius: 4px; }
+  `]
 })
-export class ButtonGroupComponent {
-  classObject = {
-    'btn': true,
-    'btn-primary': true,
-    'shadow-lg': false
+export class ClassBindingDemoComponent {
+  isActive = signal(true);
+  isPending = signal(false);
+
+  boxClasses = {
+    'card': true,
+    'shadow': true,
+    'active': false
   };
 
-  classArray = signal(['card', 'padding-medium', 'rounded']);
+  buttonClassList = signal(['btn-primary', 'shadow']);
 }
 ```
 
 ---
 
-## 8. Style Binding — `[style.propertyName]` / `[style]`
+## 8. Style Binding — `[style]` / `[style.property]`
 
-Applies inline CSS styles dynamically to template elements.
+Applies inline CSS styles directly to template elements.
 
-### Single Style Property with Units
-```html
-<!-- Direct property value -->
-<div [style.color]="textColor">Colored Text</div>
-
-<!-- Style property with explicit unit extension (.px, .rem, .%) -->
-<div [style.width.px]="containerWidth" [style.font-size.rem]="fontSize">
-  Sized Content
-</div>
-```
-
-### Multiple Style Properties
 ```ts
 import { Component, signal } from '@angular/core';
 
 @Component({
-  selector: 'app-styled-box',
+  selector: 'app-style-binding-demo',
+  standalone: true,
   template: `
-    <!-- Bind inline style string or object -->
-    <div [style]="boxStyles()">Styled Container</div>
+    <!-- 1. Single style property -->
+    <p [style.color]="textColor()">Dynamic Text Color</p>
+
+    <!-- 2. Style property with unit suffix (.px, .rem, .%, .em) -->
+    <div [style.width.px]="boxWidth()" [style.font-size.rem]="fontSizeRem">
+      Sized Box
+    </div>
+
+    <!-- 3. Multiple styles via an object -->
+    <div [style]="customStyles">Custom Styled Panel</div>
   `
 })
-export class StyledBoxComponent {
-  boxStyles = signal({
-    'background-color': '#f5f5f5',
-    'border': '1px solid #ccc',
-    'padding': '16px'
-  });
+export class StyleBindingDemoComponent {
+  textColor = signal('#dc2626');
+  boxWidth = signal(250);
+  fontSizeRem = 1.25;
+
+  customStyles = {
+    backgroundColor: '#f3f4f6',
+    border: '1px solid #d1d5db',
+    padding: '12px 16px',
+    borderRadius: '6px'
+  };
 }
 ```
 
 ---
 
-## 9. ARIA Attribute Binding
+## 9. Accessibility (ARIA) Binding
 
-For accessibility compliance (a11y), Angular supports direct binding to ARIA attributes:
+For web accessibility (a11y), bind directly to ARIA properties or attributes:
 
 ```html
-<button type="button" 
-        [aria-label]="buttonLabel" 
-        [attr.aria-expanded]="isMenuOpen()">
-  Toggle Menu
+<!-- Direct ARIA property or attribute binding -->
+<button type="button"
+        [attr.aria-expanded]="isMenuOpen()"
+        [attr.aria-label]="menuLabel"
+        (click)="toggleMenu()">
+  ☰ Menu
 </button>
+
+<div role="region" [attr.aria-hidden]="!isMenuOpen()">
+  <nav>Navigation items...</nav>
+</div>
 ```
 
 ---
 
 ## 10. Event Binding — `(event)`
 
-Event binding listens for DOM events (e.g., clicks, keypresses, mouse movements) and triggers TypeScript methods.
+Event binding captures DOM events (clicks, inputs, keypresses) and triggers TypeScript methods.
 
 ```ts
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 
 @Component({
   selector: 'app-event-demo',
+  standalone: true,
   template: `
-    <!-- Simple click listener -->
-    <button (click)="onSave()">Save</button>
+    <!-- 1. Basic click event -->
+    <button (click)="onSave()">Save Item</button>
 
-    <!-- Passing the native DOM $event object -->
-    <input type="text" (input)="onInputChange($event)" />
+    <!-- 2. Accessing DOM $event object -->
+    <input type="text" (input)="onTextInput($event)" placeholder="Type here..." />
 
-    <!-- Key Modifiers: Triggers only when Enter key is pressed -->
-    <input type="text" (keyup.enter)="onSubmitSearch()" />
+    <!-- 3. Keyup Modifiers (Filter specific keys) -->
+    <input type="text" (keyup.enter)="onSearch()" placeholder="Press Enter to search" />
+    <input type="text" (keyup.escape)="onCancel()" placeholder="Press Escape to cancel" />
 
-    <!-- Combined Key Modifiers: Shift + Enter -->
-    <textarea (keyup.shift.enter)="onAddNewLine()"></textarea>
+    <!-- 4. Combined Key Modifiers (Shift + Enter) -->
+    <textarea (keyup.shift.enter)="onSubmitMultiLine()" placeholder="Shift + Enter to submit"></textarea>
   `
 })
 export class EventDemoComponent {
+  searchQuery = signal('');
+
   onSave(): void {
-    console.log('Save button clicked!');
+    console.log('Saved successfully!');
   }
 
-  onInputChange(event: Event): void {
-    const inputElement = event.target as HTMLInputElement;
-    console.log('Current input value:', inputElement.value);
+  onTextInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    console.log('Input value:', input.value);
   }
 
-  onSubmitSearch(): void {
-    console.log('Search submitted via Enter key!');
+  onSearch(): void {
+    console.log('Search triggered via Enter key!');
   }
 
-  onAddNewLine(): void {
-    console.log('Shift + Enter pressed!');
+  onCancel(): void {
+    console.log('Action cancelled via Escape key!');
+  }
+
+  onSubmitMultiLine(): void {
+    console.log('Submitted via Shift + Enter!');
   }
 }
 ```
 
-### Key Modifiers Supported by Angular
-- `keyup.enter`
-- `keyup.escape`
-- `keyup.space`
-- `keyup.arrowup` / `keyup.arrowdown`
-- Combined modifiers: `keyup.control.enter`, `keyup.shift.enter`
+### Supported Key Modifiers
+- `(keyup.enter)`
+- `(keyup.escape)`
+- `(keyup.space)`
+- `(keyup.arrowup)` / `(keyup.arrowdown)`
+- Combined: `(keyup.control.enter)`, `(keyup.shift.enter)`
 
 ---
 
 ## 11. Two-Way Data Binding — `[( )]`
 
-Two-way binding combines property binding `[ ]` (data into template) and event binding `( )` (data out of template) into a single directive.
+Two-way binding synchronizes data in both directions simultaneously:
+- When the TypeScript state changes $\rightarrow$ the template updates.
+- When the user changes the UI input $\rightarrow$ the TypeScript state updates.
 
-### 1. Form Control Binding with `ngModel`
+### Approach 1: Form Inputs with `[(ngModel)]` (Template-Driven Forms)
 Requires importing `FormsModule` from `@angular/forms`:
 
 ```ts
@@ -291,45 +412,56 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-form-demo',
+  selector: 'app-ngmodel-demo',
+  standalone: true,
   imports: [FormsModule],
   template: `
-    <label for="username">Username:</label>
-    <input id="username" type="text" [(ngModel)]="username" />
+    <label for="nameInput">Name:</label>
+    <input id="nameInput" type="text" [(ngModel)]="userName" />
 
-    <p>Live Preview: {{ username }}</p>
+    <p>Live Output: <strong>{{ userName }}</strong></p>
   `
 })
-export class FormDemoComponent {
-  username = 'JohnDoe';
+export class NgModelDemoComponent {
+  userName = 'Jane Doe';
 }
 ```
 
-### 2. Custom Component Two-Way Binding with Signals (`model()`)
-In modern Angular (v17.2+), component inputs can use `model()` to declare two-way bindable properties effortlessly:
+---
 
-#### Child Component (`counter.component.ts`)
+### Approach 2: Component Two-Way Binding with Signals (`model()`)
+
+Modern Angular (v17.2+) provides `model()` to declare two-way bindable properties between parent and child components with zero boilerplate:
+
+#### Child Component (`rating.component.ts`)
 ```ts
 import { Component, model } from '@angular/core';
 
 @Component({
-  selector: 'app-counter',
+  selector: 'app-rating',
+  standalone: true,
   template: `
-    <button (click)="decrement()">-</button>
-    <span>{{ count() }}</span>
-    <button (click)="increment()">+</button>
+    <div class="rating-controls">
+      <button (click)="decrease()">-</button>
+      <span>Rating: {{ value() }} / 5</span>
+      <button (click)="increase()">+</button>
+    </div>
   `
 })
-export class CounterComponent {
-  // Two-way bindable model signal
-  count = model<number>(0);
+export class RatingComponent {
+  // Two-way bindable signal model
+  value = model<number>(1);
 
-  increment(): void {
-    this.count.update(c => c + 1);
+  increase(): void {
+    if (this.value() < 5) {
+      this.value.update(v => v + 1);
+    }
   }
 
-  decrement(): void {
-    this.count.update(c => c - 1);
+  decrease(): void {
+    if (this.value() > 1) {
+      this.value.update(v => v - 1);
+    }
   }
 }
 ```
@@ -337,25 +469,34 @@ export class CounterComponent {
 #### Parent Component (`app.component.ts`)
 ```ts
 import { Component, signal } from '@angular/core';
-import { CounterComponent } from './counter.component';
+import { RatingComponent } from './rating.component';
 
 @Component({
   selector: 'app-root',
-  imports: [CounterComponent],
+  standalone: true,
+  imports: [RatingComponent],
   template: `
-    <h3>Parent Component Count: {{ itemCount() }}</h3>
-    <!-- Two-way binding banana-in-a-box syntax -->
-    <app-counter [(count)]="itemCount"></app-counter>
+    <h2>Product Review</h2>
+    <!-- Banana-in-a-box syntax binds parent signal to child model -->
+    <app-rating [(value)]="productScore"></app-rating>
+
+    <p>Parent Signal Score: {{ productScore() }}</p>
   `
 })
 export class AppComponent {
-  itemCount = signal(10);
+  productScore = signal(4);
 }
 ```
+
+> 🔍 **Under the Hood:**  
+> `[(value)]="productScore"` is syntactic sugar for:  
+> `[value]="productScore()" (valueChange)="productScore.set($event)"`
 
 ---
 
 ## 📚 Official References
-- [angular.dev — Template Binding Guide](https://angular.dev/guide/templates/binding)
-- [angular.dev — Event Listeners](https://angular.dev/guide/templates/event-listeners)
-- [angular.dev — Two-Way Binding & Model Signals](https://angular.dev/guide/templates/two-way-binding)
+
+- [angular.dev — Template Binding Overview](https://angular.dev/guide/templates/binding)
+- [angular.dev — Event Listeners & Modifiers](https://angular.dev/guide/templates/event-listeners)
+- [angular.dev — Two-Way Binding & Signal Models](https://angular.dev/guide/templates/two-way-binding)
+- [angular.dev — Signal Inputs & Outputs](https://angular.dev/guide/signals/inputs)

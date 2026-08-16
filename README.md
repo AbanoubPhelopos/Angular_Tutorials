@@ -2,7 +2,7 @@
 
 Welcome to the **Angular Tutorials** repository! This repository contains structured, step-by-step documentation and hands-on guides covering Angular fundamentals, modern component architecture, template syntax, signals, and application building blocks.
 
-All tutorial modules are cross-referenced and strictly verified against the official Angular documentation ([angular.dev](https://angular.dev)).
+All tutorial modules are strictly verified against the official Angular documentation ([angular.dev](https://angular.dev)).
 
 ---
 
@@ -10,36 +10,31 @@ All tutorial modules are cross-referenced and strictly verified against the offi
 
 | Module | Topic Title | Key Concepts Covered | Official References |
 | :--- | :--- | :--- | :--- |
-| [**Module 01**](file:///home/abanoub/Desktop/projects/Angular_Tutorials/01_introduction_and_boot_flow.md) | [01. Introduction & Application Boot Flow](file:///home/abanoub/Desktop/projects/Angular_Tutorials/01_introduction_and_boot_flow.md) | • What is Angular?<br>• Framework vs. Library (Inversion of Control)<br>• Single Page Applications (SPA)<br>• Angular CLI Basics (`ng new`, `ng serve`, `ng g`)<br>• Standalone Components vs. `NgModule`<br>• Step-by-Step Boot Flow (`main.ts` $\rightarrow$ `bootstrapApplication`) | [angular.dev/overview](https://angular.dev/overview)<br>[angular.dev/tools/cli](https://angular.dev/tools/cli) |
-| [**Module 02**](file:///home/abanoub/Desktop/projects/Angular_Tutorials/02_decorators_and_data_binding.md) | [02. Decorators & Data Binding](file:///home/abanoub/Desktop/projects/Angular_Tutorials/02_decorators_and_data_binding.md) | • Angular Decorators (`@Component`, `@Directive`, `@Pipe`, `@Injectable`, `@Input`, `@Output`)<br>• Data Binding directions (Source $\rightarrow$ View, View $\rightarrow$ Source, Two-Way)<br>• Interpolation `{{ }}` & Signals<br>• Property `[prop]`, Attribute `[attr.x]`, Class `[class.x]`, Style `[style.x]`, ARIA bindings<br>• Event Binding `(event)` & Key Modifiers (`keyup.enter`)<br>• Two-Way Data Binding (`[(ngModel)]` & Signal `model()`) | [angular.dev/guide/templates/binding](https://angular.dev/guide/templates/binding)<br>[angular.dev/guide/templates/two-way-binding](https://angular.dev/guide/templates/two-way-binding) |
+| [**Module 01**](./01_introduction_and_boot_flow.md) | [01. Introduction & Application Boot Flow](./01_introduction_and_boot_flow.md) | • What is Angular?<br>• Framework vs. Library (Inversion of Control)<br>• Single Page Applications (SPA)<br>• Angular CLI Basics (`ng new`, `ng serve`, `ng g`)<br>• Standalone Components vs. `NgModule`<br>• Step-by-Step Boot Flow (`angular.json` $\rightarrow$ `main.ts` $\rightarrow$ `app.config.ts` $\rightarrow$ `index.html`) | [angular.dev/overview](https://angular.dev/overview)<br>[angular.dev/tools/cli](https://angular.dev/tools/cli) |
+| [**Module 02**](./02_decorators_and_data_binding.md) | [02. Decorators & Data Binding](./02_decorators_and_data_binding.md) | • Angular Decorators (`@Component`, `@Directive`, `@Pipe`, `@Injectable`, `@Input`, `@Output`)<br>• Data Binding directions (Source $\rightarrow$ View, View $\rightarrow$ Source, Two-Way)<br>• Interpolation `{{ }}` & Signals<br>• Property `[prop]`, Attribute `[attr.x]`, Class `[class.x]`, Style `[style.x]`, ARIA bindings<br>• Event Binding `(event)` & Key Modifiers (`keyup.enter`)<br>• Two-Way Data Binding (`[(ngModel)]` & Signal `model()`) | [angular.dev/guide/templates/binding](https://angular.dev/guide/templates/binding)<br>[angular.dev/guide/templates/two-way-binding](https://angular.dev/guide/templates/two-way-binding) |
 
 ---
 
 ## 🛠️ Prerequisites & Local Setup
 
-### 1. Requirements
-- **Node.js**: v18.13.0 or higher
-- **npm**: v9.0.0 or higher
+### 1. System Requirements
+- **Node.js**: `v18.13.0` or higher (LTS recommended)
+- **npm**: `v9.0.0` or higher
 - **Angular CLI**: Latest version
 
-### 2. Angular CLI Setup
+### 2. Quick Start
+
 ```bash
-# Install Angular CLI globally
+# 1. Install Angular CLI globally
 npm install -g @angular/cli
 
-# Verify installation
-ng version
-```
-
-### 3. Creating & Running a New Angular App
-```bash
-# Create a new Angular app with default Standalone component setup
+# 2. Create a new Angular application (Standalone by default)
 ng new my-angular-app
 
-# Navigate into the project directory
+# 3. Navigate into project directory
 cd my-angular-app
 
-# Start the local development server
+# 4. Start local development server (accessible at http://localhost:4200)
 ng serve -o
 ```
 
