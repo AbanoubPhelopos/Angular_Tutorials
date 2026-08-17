@@ -234,10 +234,11 @@ When a DOM element does not have a matching property (e.g. `colspan`, SVG attrib
 
 ---
 
-## 7. Class Binding — `[class]` / `[class.name]`
+## 7. Class Binding — `[class]` & `[ngClass]`
 
 Dynamically applies or removes CSS classes.
 
+### 1. Native Class Binding — `[class]` / `[class.name]`
 ```ts
 import { Component, signal } from '@angular/core';
 
@@ -277,12 +278,21 @@ export class ClassBindingDemoComponent {
 }
 ```
 
+### 2. `[ngClass]` Directive (from `CommonModule`)
+Used to apply multiple classes conditionally via an object map:
+```html
+<div [ngClass]="{'active': isActive(), 'disabled': isDisabled()}">
+  Dynamic State Box
+</div>
+```
+
 ---
 
-## 8. Style Binding — `[style]` / `[style.property]`
+## 8. Style Binding — `[style]` & `[ngStyle]`
 
 Applies inline CSS styles directly to template elements.
 
+### 1. Native Style Binding — `[style]` / `[style.property]`
 ```ts
 import { Component, signal } from '@angular/core';
 
@@ -316,9 +326,45 @@ export class StyleBindingDemoComponent {
 }
 ```
 
+### 2. `[ngStyle]` Directive (from `CommonModule`)
+Used to apply multiple inline CSS styles dynamically via a key-value object:
+```html
+<div [ngStyle]="{'color': textColor(), 'font-size': '18px', 'font-weight': 'bold'}">
+  Styled with NgStyle
+</div>
+```
+
 ---
 
-## 9. Accessibility (ARIA) Binding
+## 9. Template Reference Variables — `#`
+
+A **Template Reference Variable** (declared with `#varName`) creates a local reference to a DOM element, custom component, or directive inside the HTML template.
+
+```ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-template-ref-demo',
+  standalone: true,
+  template: `
+    <!-- #phone is a reference to the HTMLInputElement -->
+    <input #phone type="tel" placeholder="Enter phone number..." />
+    
+    <!-- Pass element value or trigger DOM methods directly in template -->
+    <button (click)="submitPhone(phone.value)">Submit</button>
+    <button (click)="phone.focus()">Focus Input</button>
+  `
+})
+export class TemplateRefDemoComponent {
+  submitPhone(phoneValue: string) {
+    console.log('Submitted phone:', phoneValue);
+  }
+}
+```
+
+---
+
+## 10. Accessibility (ARIA) Binding
 
 For web accessibility (a11y), bind directly to ARIA properties or attributes:
 
@@ -338,7 +384,7 @@ For web accessibility (a11y), bind directly to ARIA properties or attributes:
 
 ---
 
-## 10. Event Binding — `(event)`
+## 11. Event Binding — `(event)`
 
 Event binding captures DOM events (clicks, inputs, keypresses) and triggers TypeScript methods.
 
@@ -398,7 +444,7 @@ export class EventDemoComponent {
 
 ---
 
-## 11. Two-Way Data Binding — `[( )]`
+## 12. Two-Way Data Binding — `[( )]`
 
 Two-way binding synchronizes data in both directions simultaneously:
 - When the TypeScript state changes $\rightarrow$ the template updates.
